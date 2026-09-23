@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>다람..뭐더라</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400&family=Noto+Sans+KR:wght@900&family=Noto+Serif+KR:wght@400&family=Hahmlet:wght@300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #FFFFFF; --ink: #000000; --scale: .85; --muted: #767676; --rule: #E2E2E2; --focus: #1D2DD8;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  *, *::before, *::after { box-sizing: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .noise { display: flex; flex-wrap: wrap; align-content: flex-start; --g: 64px; }
+  .noise canvas { width: calc(var(--g) * var(--scale, 1)); height: calc(var(--g) * var(--scale, 1)); display: block; image-rendering: pixelated; }
+  .noise canvas.pending { opacity: .12; }
+  .noise .sp { width: calc(var(--g) * var(--scale, 1) * .4); }
+  .noise .br { flex-basis: 100%; height: 0; }
+
+  /* main: white page, the phrase only */
+  .hero {
+    min-height: 100vh; min-height: 100svh;
+    display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+  }
+  .hero .noise { --g: clamp(56px, 17vw, 132px); justify-content: center; max-width: calc(var(--g) * var(--scale, 1) * 6); }
+
+  /* below: two entries set in the noise font */
+  .menu { max-width: 880px; margin: 0 auto; padding: 8vh 16px 12vh; display: grid; gap: 28px; }
+  .entry { border-top: 1.5px solid var(--ink); padding-top: 18px; }
+  .entry > button {
+    display: block; padding: 0; margin: 0; background: none; border: 0; cursor: pointer; color: inherit;
+  }
+  .entry > button .noise { --g: clamp(48px, 12vw, 88px); }
+  .entry > button:hover .noise, .entry > button:focus-visible .noise { opacity: .55; }
+  .entry > button:focus-visible { outline: 2px solid var(--focus); outline-offset: 6px; }
+  .panel { padding: 28px 0 8px; }
+  .panel[hidden] { display: none; }
+
+  .intent { max-width: 34em; font-family: "Hahmlet", "Noto Serif KR", serif; font-size: 17px; line-height: 1.95; font-weight: 300; word-break: keep-all; letter-spacing: -.005em; }
+  .intent p { margin: 0 0 1.2em; white-space: pre-line; }
+  .intent .empty { color: var(--muted); }
+
+  .try textarea {
+    display: block; width: 100%; padding: 10px 0; resize: vertical; min-height: 48px;
+    font: 400 19px/1.5 "Noto Serif KR", serif; color: var(--ink);
+    background: transparent; border: 0; border-bottom: 1.5px solid var(--ink); border-radius: 0;
+  }
+  .try textarea:focus { outline: none; border-bottom-color: var(--focus); }
+  .try .noise { --g: clamp(48px, 13vw, 88px); margin-top: 24px; min-height: var(--g); }
+  .try .noise canvas { cursor: pointer; }
+  .try .noise canvas.sel { outline: 1.5px solid var(--focus); outline-offset: -1px; }
+  .try .noise canvas:focus-visible { outline: 2px solid var(--focus); }
+  .status { color: var(--muted); font-size: 13px; margin: 10px 0 0; min-height: 1.6em; }
+  .inspect { margin-top: 12px; }
+  .inspect .pair { display: flex; gap: 6px; }
+  .inspect canvas { width: min(40vw, 160px); height: min(40vw, 160px); display: block; border: 1px solid var(--rule); image-rendering: pixelated; }
+  .inspect figure { margin: 0; }
+  .inspect figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .inspect figcaption b { color: var(--ink); font: 400 18px "Noto Serif KR", serif; margin-right: 6px; }
+
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1 class="sr">다람쥐헌쳇바퀴에타고파</h1>
+    <div class="noise" id="hero" aria-hidden="true"></div>
+  </section>
+
+  <section class="menu">
+    <div class="entry">
+      <button type="button" id="b-intent" aria-expanded="false" aria-controls="p-intent" aria-label="기획의도">
+        <span class="noise" data-text="기획의도" aria-hidden="true"></span>
+      </button>
+      <div class="panel" id="p-intent" hidden>
+        <div class="intent" id="intent"></div>
+      </div>
+    </div>
+    <div class="entry">
+      <button type="button" id="b-try" aria-expanded="false" aria-controls="p-try" aria-label="사용해보기">
+        <span class="noise" data-text="사용해보기" aria-hidden="true"></span>
+      </button>
+      <div class="panel try" id="p-try" hidden>
+        <textarea id="txt" rows="2" spellcheck="false" placeholder="여기에 쓰면 노이즈 글자로 바뀝니다" aria-label="노이즈 글자로 바꿀 문장"></textarea>
+        <div class="noise" id="tryOut" aria-live="off"></div>
+        <p class="status" id="status" aria-live="polite"></p>
+        <div class="inspect" id="inspect"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+// ---------- fixed settings ----------
+const N = 32, COUNT = 10000, GRAIN = 5, SHAPE_W = 0.65, EVO = 100, KEEP = 48, OUT = 192, CYCLE_MS = 3000;
+const REF_FONT = '"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+const $ = id => document.getElementById(id);
+
+// ---------- intent text: replace the paragraphs here ----------
+const INTENT = [
+  '발화는 쉽게 유실됩니다.\n반면 문자는 그것을 거스르며 탄생했죠.\n글자는 약속이고, 고정되어 있고, 영구결번이니까요.',
+  '그렇다면 글자도 말처럼 나고 사라지게 할 수는 없을까요. 매번 조금씩 다른 모양으로 태어났다가 곧 흩어지는 글자를 만들어 보고 싶었습니다.',
+  '단단해 보이는 글자가 실은 얼마나 무른지 말입니다.',
+  '그래서 이 기획은 문자가 가진 필연성을 우연성으로, 영속성을 일시성으로 무너뜨립니다.',
+  '〈다람..뭐더라〉의 글자는 한 음절을 초성, 중성, 종성으로 나누고, 자모마다 무작위 노이즈 만 개를 만든 뒤 원래 글자의 꼴과 가장 닮은 하나를 고릅니다. 고른 노이즈는 백 번 더 조금씩 다듬어지고, 3초가 지나면 해당 과정을 다시 수행한 다른 글자로 교체됩니다.',
+  '한 자모가 이전과 똑같은 노이즈로 다시 태어날 확률은 약 43억 분의 1입니다. 한 자리의 글자가 3초마다 새로 태어난다고 치면, 방금 본 그 모양을 다시 만나기까지 평균 400년쯤 걸립니다.',
+  '맨 위의 팬그램인 ‘다람쥐헌쳇바퀴에타고파’는 한글의 기본 자음 열네 개를 모두 담은 문장으로, 페이지를 열어 두는 동안 계속 새로 쓰입니다. ‘사용해보기’에서 문장을 쓰면 그 자리에서 노이즈 글자로 바뀌고, 글자를 누르면 원래 틀과 지금의 노이즈를 나란히 볼 수 있습니다.',
+  '자유롭게 쓰셔도 좋습니다. 다만 이 밖으로 들고 나가면, 원래의 그 폰트일 거라고는 장담 못 해요.',
+];
+
+// ---------- Hangul decomposition ----------
+const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'.split('');
+const JUNG = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ'.split('');
+const JONG = ['', ...'ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ'.split('')];
+const V_SPLIT = { 'ㅘ': ['ㅗ','ㅏ'], 'ㅙ': ['ㅗ','ㅐ'], 'ㅚ': ['ㅗ','ㅣ'], 'ㅝ': ['ㅜ','ㅓ'], 'ㅞ': ['ㅜ','ㅔ'], 'ㅟ': ['ㅜ','ㅣ'], 'ㅢ': ['ㅡ','ㅣ'] };
+const J_SPLIT = { 'ㄳ':'ㄱㅅ','ㄵ':'ㄴㅈ','ㄶ':'ㄴㅎ','ㄺ':'ㄹㄱ','ㄻ':'ㄹㅁ','ㄼ':'ㄹㅂ','ㄽ':'ㄹㅅ','ㄾ':'ㄹㅌ','ㄿ':'ㄹㅍ','ㅀ':'ㄹㅎ','ㅄ':'ㅂㅅ' };
+const HORIZ = 'ㅗㅛㅜㅠㅡ';
+const LAYOUT = {
+  V0: { cho: [.06,.14,.56,.86], vV: [.58,.04,.94,.96] },
+  V1: { cho: [.06,.05,.56,.52], vV: [.58,.02,.94,.60], jong: [.14,.63,.86,.96] },
+  H0: { cho: [.18,.06,.82,.50], vH: [.04,.54,.96,.90] },
+  H1: { cho: [.22,.03,.78,.34], vH: [.04,.37,.96,.58], jong: [.16,.63,.84,.97] },
+  C0: { cho: [.06,.04,.60,.46], vH: [.04,.50,.70,.88], vV: [.70,.02,.96,.98] },
+  C1: { cho: [.06,.03,.58,.32], vH: [.04,.35,.70,.58], vV: [.70,.02,.96,.62], jong: [.12,.65,.88,.97] },
+};
+function decompose(ch) {
+  const cp = ch.codePointAt(0);
+  if (cp >= 0xAC00 && cp <= 0xD7A3) {
+    const c = cp - 0xAC00;
+    const cho = CHO[Math.floor(c / 588)], jung = JUNG[Math.floor((c % 588) / 28)], jong = JONG[c % 28];
+    let type, vH = null, vV = null;
+    if (V_SPLIT[jung]) { type = 'C'; [vH, vV] = V_SPLIT[jung]; }
+    else if (HORIZ.includes(jung)) { type = 'H'; vH = jung; }
+    else { type = 'V'; vV = jung; }
+    const L = LAYOUT[type + (jong ? 1 : 0)];
+    const parts = [{ unit: cho, mode: 'jamo', slot: L.cho, role: '초성' }];
+    if (vH) parts.push({ unit: vH, mode: 'jamo', slot: L.vH, role: '중성' });
+    if (vV) parts.push({ unit: vV, mode: 'jamo', slot: L.vV, role: '중성' });
+    if (jong) {
+      const pair = J_SPLIT[jong];
+      if (pair) {
+        const [x0, y0, x1, y1] = L.jong, mid = (x0 + x1) / 2;
+        parts.push({ unit: pair[0], mode: 'jamo', slot: [x0, y0, mid - .01, y1], role: '종성' });
+        parts.push({ unit: pair[1], mode: 'jamo', slot: [mid + .01, y0, x1, y1], role: '종성' });
+      } else parts.push({ unit: jong, mode: 'jamo', slot: L.jong, role: '종성' });
+    }
+    return parts;
+  }
+  if (cp >= 0x3131 && cp <= 0x318E) return [{ unit: ch, mode: 'jamo', slot: [.12,.12,.88,.88], role: '자모' }];
+  return [{ unit: ch, mode: 'whole', slot: [0, 0, 1, 1], role: '글자' }];
+}
+// ---------- reference frames (the letter shapes are fixed; only the noise changes) ----------
+function getRef(unit, mode, N) {
+  const sc = 6, S = N * sc;
+  const cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#000'; ctx.font = `900 ${S * 0.86}px ${REF_FONT}`;
+  ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  const m = ctx.measureText(unit);
+  if (mode === 'jamo') {
+    const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight, h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+    const s = (S * 0.92) / Math.max(w, h, 1);
+    ctx.setTransform(s, 0, 0, s, S / 2 - s * (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2,
+                     S / 2 + s * (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2);
+    ctx.fillText(unit, 0, 0);
+  } else {
+    const mg = ctx.measureText('가');
+    const y = mg.fontBoundingBoxAscent !== undefined ? S / 2 + (mg.fontBoundingBoxAscent - mg.fontBoundingBoxDescent) / 2 : S * 0.8;
+    ctx.fillText(unit, S / 2 - m.width / 2, y);
+  }
+  const d = ctx.getImageData(0, 0, S, S).data;
+  const n = N * N, T = new Float32Array(n), bits = new Uint8Array(n);
+  let sum = 0, bx0 = N, by0 = N, bx1 = -1, by1 = -1;
+  for (let gy = 0; gy < N; gy++) for (let gx = 0; gx < N; gx++) {
+    let a = 0;
+    for (let yy = 0; yy < sc; yy++) for (let xx = 0; xx < sc; xx++) a += d[((gy * sc + yy) * S + gx * sc + xx) * 4 + 3];
+    const v = a / (sc * sc * 255), i = gy * N + gx;
+    T[i] = v;
+    if (v > 0.45) { bits[i] = 1; sum++; bx0 = Math.min(bx0, gx); by0 = Math.min(by0, gy); bx1 = Math.max(bx1, gx); by1 = Math.max(by1, gy); }
+  }
+  return { T, bits, sum, bbox: sum ? [bx0, by0, bx1 + 1, by1 + 1] : [0, 0, N, N] };
+}
+
+const refCache = new Map();
+function refOf(unit, mode) {
+  const k = unit + '|' + mode;
+  if (!refCache.has(k)) refCache.set(k, getRef(unit, mode, N));
+  return refCache.get(k);
+}
+
+// ---------- noise picking (shared by workers and the main-thread fallback) ----------
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function pickNoise(T, N, count, g, density, shapeW, keepN, seed, evo) {
+  const n = N * N, rng = mulberry32(seed);
+  const smooth = t => t * t * (3 - 2 * t);
+  const C = Math.ceil(N / g) + 2;
+  // lookup tables mapping pixel -> coarse cell, for each sub-cell offset, at full and half resolution
+  const makeTabs = (R, step) => {
+    const list = [];
+    for (let o = 0; o < g; o++) {
+      const idx = new Int32Array(R), w = new Float32Array(R);
+      for (let x = 0; x < R; x++) { const f = (x * step + (step - 1) / 2 + o) / g, i = f | 0; idx[x] = i; w[x] = smooth(f - i); }
+      list.push({ idx, w });
+    }
+    return list;
+  };
+  const M = N >> 1, m = M * M;
+  const tabsHi = makeTabs(N, 1), tabsLo = makeTabs(M, 2);
+  // half-resolution target for the fast first pass
+  const TL = new Float32Array(m);
+  for (let y = 0; y < M; y++) for (let x = 0; x < M; x++) {
+    const i = 2 * y * N + 2 * x; TL[y * M + x] = (T[i] + T[i + 1] + T[i + N] + T[i + N + 1]) / 4;
+  }
+  let sL = 0, sLL = 0; for (let i = 0; i < m; i++) { sL += TL[i]; sLL += TL[i] * TL[i]; }
+  const vL = sLL - sL * sL / m;
+  let sT = 0, sTT = 0; for (let i = 0; i < n; i++) { sT += T[i]; sTT += T[i] * T[i]; }
+  const vT = sTT - sT * sT / n;
+
+  const rowsX = new Float32Array(C * N), vals = new Float32Array(n), hist = new Uint32Array(64);
+  // render one candidate (coarse grid + offsets) at resolution R into out; returns nothing
+  const render = (coarse, ox, oy, R, tabs, out) => {
+    const TX = tabs[ox], TY = tabs[oy], xi = TX.idx, xw = TX.w, yi = TY.idx, yw = TY.w;
+    for (let cy = 0; cy < C; cy++) {
+      const r = cy * C, o = cy * R;
+      for (let x = 0; x < R; x++) { const j = r + xi[x], a = coarse[j]; rowsX[o + x] = a + (coarse[j + 1] - a) * xw[x]; }
+    }
+    hist.fill(0);
+    const RR = R * R;
+    for (let y = 0; y < R; y++) {
+      const o0 = yi[y] * R, o1 = o0 + R, ty = yw[y], row = y * R;
+      for (let x = 0; x < R; x++) { const v = rowsX[o0 + x] + (rowsX[o1 + x] - rowsX[o0 + x]) * ty; vals[row + x] = v; hist[(v * 63.999) | 0]++; }
+    }
+    const want = density * RR; let acc = 0, bin = 0;
+    while (bin < 63 && acc + hist[bin] < want) { acc += hist[bin]; bin++; }
+    const thr = (bin + (hist[bin] ? (want - acc) / hist[bin] : 0)) / 64;
+    for (let i = 0; i < RR; i++) out[i] = vals[i] < thr ? 1 : 0;
+  };
+
+  // pass 1: all candidates at half resolution
+  const coarse = new Float32Array(C * C), lo = new Uint8Array(m);
+  const keep = []; let floor = -Infinity;
+  for (let t = 0; t < count; t++) {
+    for (let i = 0; i < C * C; i++) coarse[i] = rng();
+    const ox = (rng() * g) | 0, oy = (rng() * g) | 0;
+    render(coarse, ox, oy, M, tabsLo, lo);
+    let sC = 0, sCT = 0;
+    for (let i = 0; i < m; i++) if (lo[i]) { sC++; sCT += TL[i]; }
+    const vC = sC - sC * sC / m;
+    const raw = vC > 0 && vL > 0 ? (sCT - sC * sL / m) / Math.sqrt(vC * vL) : -1;
+    if (keep.length < keepN || raw > floor) {
+      keep.push({ raw, coarse: coarse.slice(), ox, oy });
+      if (keep.length > keepN) { let mi = 0; for (let i = 1; i < keep.length; i++) if (keep[i].raw < keep[mi].raw) mi = i; keep.splice(mi, 1); }
+      if (keep.length >= keepN) { floor = Infinity; for (const k of keep) if (k.raw < floor) floor = k.raw; }
+    }
+  }
+  // pass 2: finalists at full resolution
+  for (const k of keep) { k.bits = new Uint8Array(n); render(k.coarse, k.ox, k.oy, N, tabsHi, k.bits); }
+
+  // re-rank the finalists by blurred shape similarity
+  const r = Math.max(1, Math.round(N / 16));
+  const blur = (src, dst, tmp) => {
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      let s = 0, c = 0; for (let k = -r; k <= r; k++) { const xx = x + k; if (xx >= 0 && xx < N) { s += src[y * N + xx]; c++; } }
+      tmp[y * N + x] = s / c;
+    }
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      let s = 0, c = 0; for (let k = -r; k <= r; k++) { const yy = y + k; if (yy >= 0 && yy < N) { s += tmp[yy * N + x]; c++; } }
+      dst[y * N + x] = s / c;
+    }
+  };
+  const tmp = new Float32Array(n), BT = new Float32Array(n), BC = new Float32Array(n), CF = new Float32Array(n);
+  blur(T, BT, tmp);
+  let sB = 0, sBB = 0; for (let i = 0; i < n; i++) { sB += BT[i]; sBB += BT[i] * BT[i]; }
+  const vB = sBB - sB * sB / n;
+  const score = bits => {
+    let sC = 0, sCT = 0;
+    for (let i = 0; i < n; i++) { const v = bits[i]; CF[i] = v; if (v) { sC++; sCT += T[i]; } }
+    const vC = sC - sC * sC / n;
+    const raw = vC > 0 && vT > 0 ? (sCT - sC * sT / n) / Math.sqrt(vC * vT) : -1;
+    blur(CF, BC, tmp);
+    let sb = 0, sbb = 0, sbt = 0; for (let i = 0; i < n; i++) { const v = BC[i]; sb += v; sbb += v * v; sbt += v * BT[i]; }
+    const vb = sbb - sb * sb / n;
+    const soft = vb > 0 && vB > 0 ? (sbt - sb * sB / n) / Math.sqrt(vb * vB) : -1;
+    return (1 - shapeW) * raw + shapeW * soft;
+  };
+  let best = null, bestScore = -Infinity;
+  for (const k of keep) { const sc = score(k.bits); if (sc > bestScore) { bestScore = sc; best = k.bits; } }
+
+  // shape convergence: swap a noise block, keep it if the letter gets closer
+  if (evo > 0) {
+    let x0 = N, y0 = N, x1 = 0, y1 = 0;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (T[y * N + x] > 0.45) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+    x0 = Math.max(0, x0 - 2); y0 = Math.max(0, y0 - 2); x1 = Math.min(N, x1 + 3); y1 = Math.min(N, y1 + 3);
+    const cur = best.slice(), saved = new Uint8Array(g * g);
+    for (let t = 0; t < evo; t++) {
+      const px = x0 + ((rng() * Math.max(1, x1 - x0 - g + 1)) | 0), py = y0 + ((rng() * Math.max(1, y1 - y0 - g + 1)) | 0);
+      const val = rng() < density ? 1 : 0;
+      let k = 0;
+      for (let y = py; y < Math.min(N, py + g); y++) for (let x = px; x < Math.min(N, px + g); x++) { const i = y * N + x; saved[k++] = cur[i]; cur[i] = val; }
+      const sc = score(cur);
+      if (sc >= bestScore) bestScore = sc;
+      else { k = 0; for (let y = py; y < Math.min(N, py + g); y++) for (let x = px; x < Math.min(N, px + g); x++) cur[y * N + x] = saved[k++]; }
+    }
+    best = cur;
+  }
+  return best;
+}
+
+// ---------- worker pool (falls back to the main thread if workers are unavailable) ----------
+const WORKER_SRC = `${mulberry32.toString()}\n${pickNoise.toString()}\n` +
+  `onmessage = e => { const d = e.data; const bits = pickNoise(d.T, d.N, d.count, d.g, d.density, d.shapeW, d.keep, d.seed, d.evo); postMessage({ id: d.id, bits }, [bits.buffer]); };`;
+const pool = [];
+let useWorkers = false;
+try {
+  const url = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }));
+  const size = Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1));
+  for (let i = 0; i < size; i++) {
+    const w = new Worker(url);
+    const slot = { w, job: null };
+    w.onmessage = e => { const job = slot.job; slot.job = null; if (job) finish(job, e.data.bits); dispatch(); };
+    w.onerror = () => { disableWorkers(); };
+    pool.push(slot);
+  }
+  useWorkers = true;
+} catch (e) { useWorkers = false; }
+function disableWorkers() {
+  if (!useWorkers) return;
+  useWorkers = false;
+  for (const s of pool) { if (s.job) queue.unshift(s.job); s.job = null; try { s.w.terminate(); } catch (e) {} }
+  dispatch();
+}
+
+// ---------- jobs: one fresh noise per jamo occurrence ----------
+let queue = [], mainBusy = false, jobId = 0;
+function enqueue(cell, part, front) {
+  const job = { id: ++jobId, cell, part };
+  if (front) queue.unshift(job); else queue.push(job);
+}
+function payload(job) {
+  const ref = job.part.ref;
+  return { id: job.id, T: ref.T, N, count: COUNT, g: GRAIN, density: Math.min(0.8, Math.max(0.05, ref.sum / (N * N))), shapeW: SHAPE_W, keep: KEEP, evo: EVO, seed: (Math.random() * 4294967296) >>> 0 };
+}
+function finish(job, bits) {
+  if (!job.cell.alive) return;
+  job.part.bits = bits;
+  drawCell(job.cell);
+  if (picked === job.cell) renderInspector();
+}
+function inflight() { return pool.filter(s => s.job).length + (mainBusy ? 1 : 0); }
+function dispatch() {
+  queue = queue.filter(j => j.cell.alive);
+  if (useWorkers) {
+    for (const s of pool) {
+      if (s.job || !queue.length) continue;
+      const job = queue.shift(); s.job = job;
+      try { s.w.postMessage(payload(job)); } catch (e) { s.job = null; queue.unshift(job); disableWorkers(); return; }
+    }
+    return;
+  }
+  if (mainBusy || !queue.length) return;
+  mainBusy = true;
+  const job = queue.shift();
+  setTimeout(() => {
+    const d = payload(job);
+    const bits = pickNoise(d.T, d.N, d.count, d.g, d.density, d.shapeW, d.keep, d.seed, d.evo);
+    mainBusy = false; finish(job, bits); dispatch();
+  }, 0);
+}
+
+// every ~3 s, once the last round is done, regenerate every visible jamo
+let cycleStart = 0;
+setInterval(() => {
+  if (queue.length || inflight() || document.hidden) return;
+  if (performance.now() - cycleStart < CYCLE_MS) return;
+  cycleStart = performance.now();
+  for (const cells of groups.values()) for (const c of cells) if (c.visible) for (const p of c.parts) if (p.ref.sum) enqueue(c, p);
+  dispatch();
+}, 200);
+
+// ---------- drawing ----------
+function paintBits(bits, color) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = N;
+  const ctx = cv.getContext('2d'); ctx.fillStyle = color;
+  for (let i = 0; i < N * N; i++) if (bits[i]) ctx.fillRect(i % N, (i / N) | 0, 1, 1);
+  return cv;
+}
+function compose(ctx, parts, field, color) {
+  ctx.imageSmoothingEnabled = false;
+  for (const p of parts) {
+    const bits = field === 'ref' ? p.ref.bits : p.bits;
+    if (!bits || !p.ref.sum) continue;
+    const src = paintBits(bits, color);
+    if (p.mode === 'whole') { ctx.drawImage(src, 0, 0, OUT, OUT); continue; }
+    const [bx0, by0, bx1, by1] = p.ref.bbox, bw = bx1 - bx0, bh = by1 - by0;
+    const [sx0, sy0, sx1, sy1] = p.slot.map(v => v * OUT), W = sx1 - sx0, H = sy1 - sy0;
+    let kx = W / bw, ky = H / bh;
+    if (ky > kx * 1.5) ky = kx * 1.5;
+    if (kx > ky * 1.5) kx = ky * 1.5;
+    const dw = bw * kx, dh = bh * ky;
+    ctx.drawImage(src, bx0, by0, bw, bh, sx0 + (W - dw) / 2, sy0 + (H - dh) / 2, dw, dh);
+  }
+}
+function drawCell(cell) {
+  const cv = cell.cv, ctx = cv.getContext('2d');
+  cv.width = cv.height = OUT;
+  const ready = cell.parts.every(p => p.bits || !p.ref.sum);
+  cv.classList.toggle('pending', !ready);
+  if (!ready) {
+    ctx.fillStyle = '#000'; const u = OUT / 32;
+    for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) if (Math.random() < 0.3) ctx.fillRect(x * u, y * u, u, u);
+    return;
+  }
+  compose(ctx, cell.parts, 'bits', '#000');
+}
+
+// ---------- text containers ----------
+const groups = new Map();
+const seen = new IntersectionObserver(entries => {
+  for (const e of entries) { const c = e.target._cell; if (c) c.visible = e.isIntersecting; }
+}, { rootMargin: '80px' });
+function setText(container, text, opts = {}) {
+  for (const c of groups.get(container) || []) { c.alive = false; seen.unobserve(c.cv); }
+  container.innerHTML = '';
+  const cells = [];
+  for (const ch of Array.from(text)) {
+    if (ch === '\n') { const d = document.createElement('div'); d.className = 'br'; container.appendChild(d); continue; }
+    if (/\s/.test(ch)) { const s = document.createElement('span'); s.className = 'sp'; container.appendChild(s); continue; }
+    const cv = document.createElement('canvas');
+    const cell = { ch, cv, alive: true, visible: false, parts: decompose(ch).map(p => ({ ...p, ref: refOf(p.unit, p.mode), bits: null })) };
+    cv._cell = cell;
+    if (opts.onPick) {
+      cv.tabIndex = 0; cv.setAttribute('role', 'button'); cv.setAttribute('aria-label', ch + ' 틀과 비교하기');
+      cv.addEventListener('click', () => opts.onPick(cell));
+      cv.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opts.onPick(cell); } });
+    } else cv.setAttribute('aria-hidden', 'true');
+    container.appendChild(cv); cells.push(cell); drawCell(cell); seen.observe(cv);
+    for (const p of cell.parts) if (p.ref.sum) enqueue(cell, p, !!opts.priority);
+  }
+  groups.set(container, cells);
+  dispatch();
+  return cells;
+}
+
+// ---------- try panel ----------
+const tryOut = $('tryOut');
+let picked = null;
+function pick(cell) {
+  picked = cell;
+  for (const c of groups.get(tryOut) || []) c.cv.classList.toggle('sel', c === cell);
+  renderInspector();
+}
+function renderInspector() {
+  const box = $('inspect'); box.innerHTML = '';
+  if (!picked || !picked.alive) { picked = null; return; }
+  const f = document.createElement('figure');
+  const pair = document.createElement('div'); pair.className = 'pair';
+  const cap = document.createElement('figcaption');
+  const b = document.createElement('b'); b.textContent = picked.ch; cap.appendChild(b);
+  if (picked.parts.every(p => p.bits || !p.ref.sum)) {
+    const frame = document.createElement('canvas'), noise = document.createElement('canvas');
+    frame.width = frame.height = noise.width = noise.height = OUT;
+    const fctx = frame.getContext('2d', { willReadFrequently: true }), nctx = noise.getContext('2d', { willReadFrequently: true });
+    compose(fctx, picked.parts, 'ref', '#9A9A95');
+    compose(nctx, picked.parts, 'bits', '#000');
+    const A = fctx.getImageData(0, 0, OUT, OUT).data, B = nctx.getImageData(0, 0, OUT, OUT).data, n = OUT * OUT;
+    let sa = 0, sb = 0, sab = 0;
+    for (let i = 0; i < n; i++) { const a = A[i * 4 + 3] > 127 ? 1 : 0, c = B[i * 4 + 3] > 127 ? 1 : 0; sa += a; sb += c; sab += a & c; }
+    const va = sa - sa * sa / n, vb = sb - sb * sb / n;
+    const corr = va > 0 && vb > 0 ? (sab - sa * sb / n) / Math.sqrt(va * vb) : 0;
+    pair.append(frame, noise);
+    cap.append(`원래 틀과 지금의 노이즈, 유사도 ${corr.toFixed(3)}`);
+  } else cap.append('노이즈를 고르는 중이에요.');
+  f.append(pair, cap); box.appendChild(f);
+}
+let tId;
+$('txt').addEventListener('input', () => {
+  clearTimeout(tId);
+  tId = setTimeout(() => { setText(tryOut, $('txt').value, { onPick: pick, priority: true }); renderInspector(); }, 80);
+});
+$('status').remove();
+
+// ---------- menu ----------
+const entries = [['b-intent', 'p-intent'], ['b-try', 'p-try']];
+for (const [bid, pid] of entries) {
+  $(bid).addEventListener('click', () => {
+    const open = $(bid).getAttribute('aria-expanded') !== 'true';
+    for (const [b, p] of entries) { $(b).setAttribute('aria-expanded', 'false'); $(p).hidden = true; }
+    if (open) {
+      $(bid).setAttribute('aria-expanded', 'true'); $(pid).hidden = false;
+      $(bid).scrollIntoView({ block: 'start' });
+      if (pid === 'p-try') $('txt').focus({ preventScroll: true });
+    }
+  });
+}
+function renderIntent() {
+  const box = $('intent'); box.innerHTML = '';
+  if (!INTENT.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = '기획의도 글이 들어갈 자리입니다.'; box.appendChild(p); return; }
+  for (const t of INTENT) { const p = document.createElement('p'); p.textContent = t; box.appendChild(p); }
+}
+
+// ---------- boot ----------
+renderIntent();
+(async () => {
+  const all = '다람쥐헌쳇바퀴에타고파기획의도사용해보기ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎㅏㅐㅑㅒㅓㅔㅕㅖㅗㅛㅜㅠㅡㅣ';
+  try { await Promise.race([document.fonts.load(`900 100px "Noto Sans KR"`, all), new Promise(r => setTimeout(r, 3000))]); } catch (e) {}
+  setText($('hero'), '다람쥐헌쳇바퀴에타고파');
+  for (const el of document.querySelectorAll('.entry .noise[data-text]')) setText(el, el.dataset.text);
+  cycleStart = performance.now();
+})();
+</script>
+</body>
+</html>
