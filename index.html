@@ -48,6 +48,16 @@
   .intent { max-width: 34em; font-family: "Hahmlet", "Noto Serif KR", serif; font-size: 17px; line-height: 1.95; font-weight: 300; word-break: keep-all; letter-spacing: -.005em; }
   .intent p { margin: 0 0 1.2em; white-space: pre-line; }
   .intent .empty { color: var(--muted); }
+  .intent figure { margin: 2.2em 0 2.4em; }
+  .intent figcaption, .intent .fig-cap { font: 400 12px/1.6 "IBM Plex Sans KR", sans-serif; color: var(--muted); margin-top: 8px; }
+  .fig-grid canvas.big { width: 100%; height: auto; display: block; image-rendering: pixelated; cursor: crosshair; border: 1px solid var(--rule); }
+  .fig-grid .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+  .fig-grid .trio canvas { width: 100%; aspect-ratio: 1; display: block; image-rendering: pixelated; border: 1px solid var(--rule); }
+  .fig-grid .trio span { display: block; font: 400 12px/1.5 "IBM Plex Sans KR", sans-serif; color: var(--muted); margin-top: 4px; }
+  .fig-grid .again { font: 400 12px "IBM Plex Sans KR", sans-serif; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--ink); padding: 0; margin-left: 6px; cursor: pointer; }
+  .fig-grid .again:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .fig-grid .key { display: inline-block; width: 9px; height: 9px; vertical-align: -1px; margin-right: 3px; }
+  .fig-strip .noise { --g: clamp(40px, 10vw, 60px); }
 
   .try textarea {
     display: block; width: 100%; padding: 10px 0; resize: vertical; min-height: 48px;
@@ -106,14 +116,14 @@ const $ = id => document.getElementById(id);
 
 // ---------- intent text: replace the paragraphs here ----------
 const INTENT = [
-  '발화는 쉽게 유실됩니다.\n반면 문자는 그것을 거스르며 탄생했죠.\n글자는 약속이고, 고정되어 있고, 영구결번이니까요.',
-  '그렇다면 글자도 말처럼 나고 사라지게 할 수는 없을까요. 매번 조금씩 다른 모양으로 태어났다가 곧 흩어지는 글자를 만들어 보고 싶었습니다.',
-  '단단해 보이는 글자가 실은 얼마나 무른지 말입니다.',
-  '그래서 이 기획은 문자가 가진 필연성을 우연성으로, 영속성을 일시성으로 무너뜨립니다.',
-  '〈다람..뭐더라〉의 글자는 한 음절을 초성, 중성, 종성으로 나누고, 자모마다 무작위 노이즈 만 개를 만든 뒤 원래 글자의 꼴과 가장 닮은 하나를 고릅니다. 고른 노이즈는 백 번 더 조금씩 다듬어지고, 3초가 지나면 해당 과정을 다시 수행한 다른 글자로 교체됩니다.',
+  '발화는 쉽게 유실되는 반면 문자는 그것을 거스르며 탄생했습니다.\n글자는 약속이고, 고정되어 있고, 영구결번이니까요.',
+  '그래서 이 기획은 문자가 가진 필연성을 우연성으로,\n영속성을 일시성으로 무너뜨립니다.\n단단해 보이는 글자가 실은 얼마나 무른지 보여주면서 말입니다.',
+  '〈다람..뭐더라〉의 글자는 한 음절을 초성, 중성, 종성으로 나누고, 자모마다 무작위 노이즈 만 개를 만든 뒤 원래 글자의 꼴과 가장 닮은 하나를 고릅니다. 고른 노이즈는 3초가 지나면 해당 과정을 다시 수행한 다른 글자로 교체됩니다.',
+  { fig: 'grid' },
   '한 자모가 이전과 똑같은 노이즈로 다시 태어날 확률은 약 43억 분의 1입니다. 한 자리의 글자가 3초마다 새로 태어난다고 치면, 방금 본 그 모양을 다시 만나기까지 평균 400년쯤 걸립니다.',
-  '맨 위의 팬그램인 ‘다람쥐헌쳇바퀴에타고파’는 한글의 기본 자음 열네 개를 모두 담은 문장으로, 페이지를 열어 두는 동안 계속 새로 쓰입니다. ‘사용해보기’에서 문장을 쓰면 그 자리에서 노이즈 글자로 바뀌고, 글자를 누르면 원래 틀과 지금의 노이즈를 나란히 볼 수 있습니다.',
-  '자유롭게 쓰셔도 좋습니다. 다만 이 밖으로 들고 나가면, 원래의 그 폰트일 거라고는 장담 못 해요.',
+  { fig: 'strip' },
+  '팬그램인 ‘다람쥐헌쳇바퀴에타고파’는 한글의 기본 자음 열네 개를 모두 담은 문장으로, 페이지를 열어 두는 동안 계속 새로 쓰입니다. ‘사용해보기’에서 문장을 쓰면 그 자리에서 노이즈 글자로 바뀌고, 글자를 누르면 원래 틀과 지금의 노이즈를 나란히 볼 수 있습니다.',
+  '자유롭게 쓰셔도 좋습니다.\n다만 이 밖으로 들고 나가도 처음과 같을거라고는 장담 못 해요.\n다람쥐 헌 쳇바퀴에서 어…음…뭐더라?',
 ];
 
 // ---------- Hangul decomposition ----------
@@ -504,13 +514,125 @@ for (const [bid, pid] of entries) {
       $(bid).setAttribute('aria-expanded', 'true'); $(pid).hidden = false;
       $(bid).scrollIntoView({ block: 'start' });
       if (pid === 'p-try') $('txt').focus({ preventScroll: true });
+      if (pid === 'p-intent') {
+        if (gridFig && !gridFig.built) buildGrid('ㄹ');
+        const strip = document.querySelector('.fig-strip');
+        if (strip && !groups.has(strip._box)) setText(strip._box, 'ㄹ'.repeat(12));
+      }
     }
   });
 }
 function renderIntent() {
   const box = $('intent'); box.innerHTML = '';
   if (!INTENT.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = '기획의도 글이 들어갈 자리입니다.'; box.appendChild(p); return; }
-  for (const t of INTENT) { const p = document.createElement('p'); p.textContent = t; box.appendChild(p); }
+  for (const t of INTENT) {
+    if (typeof t === 'string') { const p = document.createElement('p'); p.textContent = t; box.appendChild(p); continue; }
+    if (t.fig === 'grid') box.appendChild(buildGridFigure());
+    if (t.fig === 'strip') box.appendChild(buildStripFigure());
+  }
+}
+
+// ---------- figure: the 10,000 candidates for one jamo ----------
+const PANGRAM_JAMO = 'ㄷㄹㅁㅈㅎㄴㅊㅅㅂㅋㅇㅌㄱㅍ';
+let gridFig = null;
+function buildGridFigure() {
+  const f = document.createElement('figure'); f.className = 'fig-grid';
+  f.innerHTML = `<canvas class="big" width="1600" height="1600" aria-label="노이즈 후보 만 개를 100×100으로 늘어놓은 격자"></canvas>
+    <div class="trio">
+      <div><canvas width="32" height="32"></canvas><span>원래 틀</span></div>
+      <div><canvas width="32" height="32"></canvas><span>채택</span></div>
+      <div><canvas width="32" height="32"></canvas><span class="tapcap">격자를 누르면 그 후보</span></div>
+    </div>
+    <figcaption><span class="cap"></span><button type="button" class="again">다른 자모로 다시 뽑기</button></figcaption>`;
+  gridFig = { el: f, state: null, built: false };
+  f.querySelector('.again').addEventListener('click', () => buildGrid(PANGRAM_JAMO[(Math.random() * PANGRAM_JAMO.length) | 0]));
+  f.querySelector('canvas.big').addEventListener('click', e => {
+    const st = gridFig.state; if (!st) return;
+    const r = e.target.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * 100), y = Math.floor((e.clientY - r.top) / r.height * 100), t = y * 100 + x;
+    if (t < 0 || t >= 10000) return;
+    const full = new Uint8Array(N * N);
+    gridRender(st.coarse, t * st.CC, st.offs[t * 2], st.offs[t * 2 + 1], N, st.TH, full, st.dens, st.C);
+    drawSmall(f.querySelectorAll('.trio canvas')[2], full, '#000');
+    f.querySelector('.tapcap').textContent = `${(t + 1).toLocaleString()}번째 후보, 1차 ${st.rank[t] + 1}위`;
+  });
+  return f;
+}
+function drawSmall(cv, bits, color) {
+  const c = cv.getContext('2d'); c.clearRect(0, 0, N, N); c.fillStyle = color;
+  for (let i = 0; i < N * N; i++) if (bits[i]) c.fillRect(i % N, (i / N) | 0, 1, 1);
+}
+const gridRowsX = new Float32Array(16 * N), gridVals = new Float32Array(N * N), gridHist = new Uint32Array(64);
+function gridRender(co, off, ox, oy, R, T, out, dens, C) {
+  const X = T[ox], Y = T[oy];
+  for (let cy = 0; cy < C; cy++) { const r = off + cy * C, o = cy * R; for (let x = 0; x < R; x++) { const j = r + X.idx[x], a = co[j]; gridRowsX[o + x] = a + (co[j + 1] - a) * X.w[x]; } }
+  gridHist.fill(0);
+  for (let y = 0; y < R; y++) { const o0 = Y.idx[y] * R, o1 = o0 + R, ty = Y.w[y]; for (let x = 0; x < R; x++) { const v = gridRowsX[o0 + x] + (gridRowsX[o1 + x] - gridRowsX[o0 + x]) * ty; gridVals[y * R + x] = v; gridHist[(v * 63.999) | 0]++; } }
+  const RR = R * R, want = dens * RR; let acc = 0, b = 0;
+  while (b < 63 && acc + gridHist[b] < want) { acc += gridHist[b]; b++; }
+  const thr = (b + (gridHist[b] ? (want - acc) / gridHist[b] : 0)) / 64;
+  for (let i = 0; i < RR; i++) out[i] = gridVals[i] < thr ? 1 : 0;
+}
+function gridCorr(bits, T, n) {
+  let s = 0, st = 0, sT = 0, sTT = 0;
+  for (let i = 0; i < n; i++) { sT += T[i]; sTT += T[i] * T[i]; if (bits[i]) { s++; st += T[i]; } }
+  const vc = s - s * s / n, vt = sTT - sT * sT / n;
+  return vc > 0 && vt > 0 ? (st - s * sT / n) / Math.sqrt(vc * vt) : -1;
+}
+async function buildGrid(unit) {
+  const f = gridFig.el; gridFig.built = true;
+  f.querySelector('.cap').textContent = `‘${unit}’의 노이즈 후보를 뽑는 중…`;
+  try { await document.fonts.load(`900 100px "Noto Sans KR"`, unit); } catch (e) {}
+  await new Promise(r => setTimeout(r, 30));
+  const M = 16, G = GRAIN, C = Math.ceil(N / G) + 2, CC = C * C, COUNTG = 10000;
+  const sm = t => t * t * (3 - 2 * t);
+  const tabs = (R, step) => { const L = []; for (let o = 0; o < G; o++) { const idx = new Int32Array(R), w = new Float32Array(R); for (let x = 0; x < R; x++) { const q = (x * step + (step - 1) / 2 + o) / G, i = q | 0; idx[x] = i; w[x] = sm(q - i); } L.push({ idx, w }); } return L; };
+  const TH = tabs(N, 1), TL = tabs(M, 2);
+  const ref = refOf(unit, 'jamo'), n = N * N, m = M * M;
+  const dens = Math.min(0.8, Math.max(0.05, ref.sum / n));
+  const TLo = new Float32Array(m);
+  for (let y = 0; y < M; y++) for (let x = 0; x < M; x++) { const i = 2 * y * N + 2 * x; TLo[y * M + x] = (ref.T[i] + ref.T[i + 1] + ref.T[i + N] + ref.T[i + N + 1]) / 4; }
+  const coarse = new Float32Array(COUNTG * CC), offs = new Uint8Array(COUNTG * 2), raws = new Float32Array(COUNTG), lo = new Uint8Array(m);
+  const g = f.querySelector('canvas.big').getContext('2d'), img = g.createImageData(1600, 1600), D = img.data;
+  for (let t = 0; t < COUNTG; t++) {
+    const o = t * CC; for (let i = 0; i < CC; i++) coarse[o + i] = Math.random();
+    const ox = (Math.random() * G) | 0, oy = (Math.random() * G) | 0; offs[t * 2] = ox; offs[t * 2 + 1] = oy;
+    gridRender(coarse, o, ox, oy, M, TL, lo, dens, C);
+    raws[t] = gridCorr(lo, TLo, m);
+    const bx = (t % 100) * 16, by = ((t / 100) | 0) * 16;
+    for (let i = 0; i < m; i++) if (lo[i]) { const p = ((by + (i >> 4)) * 1600 + bx + (i & 15)) * 4; D[p + 3] = 255; }
+  }
+  const order = [...raws.keys()].sort((a, b) => raws[b] - raws[a]), rank = new Int32Array(COUNTG);
+  order.forEach((t, i) => { rank[t] = i; });
+  const fin = order.slice(0, KEEP), full = new Uint8Array(n);
+  let win = -1, ws = -Infinity, wbits = null;
+  for (const t of fin) { gridRender(coarse, t * CC, offs[t * 2], offs[t * 2 + 1], N, TH, full, dens, C); const s = gridCorr(full, ref.T, n); if (s > ws) { ws = s; win = t; wbits = full.slice(); } }
+  const box = (t, col, w) => {
+    const bx = (t % 100) * 16, by = ((t / 100) | 0) * 16;
+    for (let k = 0; k < 16; k++) for (let q = 0; q < w; q++) for (const [x, y] of [[bx + k, by + q], [bx + k, by + 15 - q], [bx + q, by + k], [bx + 15 - q, by + k]]) {
+      const p = (y * 1600 + x) * 4; D[p] = col[0]; D[p + 1] = col[1]; D[p + 2] = col[2]; D[p + 3] = 255;
+    }
+  };
+  for (const t of fin) if (t !== win) box(t, [160, 160, 156], 2);
+  box(win, [29, 45, 216], 4);
+  g.putImageData(img, 0, 0);
+  const trio = f.querySelectorAll('.trio canvas');
+  drawSmall(trio[0], ref.bits, '#9A9A95'); drawSmall(trio[1], wbits, '#000');
+  trio[2].getContext('2d').clearRect(0, 0, N, N);
+  f.querySelector('.tapcap').textContent = '격자를 누르면 그 후보';
+  gridFig.state = { coarse, offs, rank, dens, TH, CC, C };
+  f.querySelector('.cap').innerHTML = `‘${unit}’ 하나를 위해 뽑힌 노이즈 10,000개. <span class="key" style="border:2px solid #A0A09C"></span>회색 테두리는 2차 선별에 오른 48개, <span class="key" style="border:2px solid #1D2DD8"></span>파란 테두리가 채택된 하나입니다.`;
+}
+
+// ---------- figure: the same jamo, never the same shape ----------
+function buildStripFigure() {
+  const f = document.createElement('figure'); f.className = 'fig-strip';
+  const box = document.createElement('div'); box.className = 'noise'; box.setAttribute('aria-hidden', 'true');
+  const cap = document.createElement('figcaption');
+  cap.textContent = '같은 ‘ㄹ’ 열두 개. 모두 3초마다 새로 태어나고, 같은 모양은 다시 나오지 않습니다.';
+  f.append(box, cap);
+  f._box = box;
+  return f;
 }
 
 // ---------- boot ----------
